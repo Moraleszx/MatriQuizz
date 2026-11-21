@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MatriQuiz — Quiz de Álgebra Linear</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="enade.css">
+</head>
+<body>
+<div class="wrap">
+
+  <!-- MENU -->
+  <section id="menu" class="screen on">
+    <div class="card">
+      <span class="tag">Álgebra Linear • Jogo educativo</span>
+      <h1 class="logo f">Matri<span>Quiz</span></h1>
+      <p class="sub">Responda perguntas de matrizes, determinantes, sistemas, vetores e transformações, sozinho ou desafiando um amigo. As questões são geradas na hora, então cada partida é diferente.</p>
+
+      <label class="t">Quantos jogadores?</label>
+      <div class="chips">
+        <label class="chip"><input type="radio" name="np" value="1" checked>👤 1 jogador</label>
+        <label class="chip"><input type="radio" name="np" value="2">👥 2 jogadores</label>
+      </div>
+
+      <div class="names">
+        <div><label class="t" for="pname1">Nome do jogador 1</label><input id="pname1" type="text" maxlength="20" placeholder="Ex.: Ana"></div>
+        <div id="p2box" style="display:none"><label class="t" for="pname2">Nome do jogador 2</label><input id="pname2" type="text" maxlength="20" placeholder="Ex.: Bruno"></div>
+      </div>
+
+      <div class="toprow">
+        <label class="t">Matérias (verde = selecionada)</label>
+        <div class="row" style="gap:6px"><button type="button" class="minibtn" id="allTopics">Todas</button><button type="button" class="minibtn" id="noTopics">Limpar</button></div>
+      </div>
+      <div class="chips" id="topicChips"></div>
+      <p class="small" style="margin:8px 0 0">As perguntas vêm só das matérias marcadas em verde. Marcou uma? Só dela. Marcou duas? Das duas, e assim por diante.</p>
+
+      <label class="t">Dificuldade</label>
+      <div class="tabs" id="modeTabs">
+        <label class="tab"><input type="radio" name="mode" value="classico" checked>🎯 Clássico (Fácil ➜ Difícil)</label>
+        <label class="tab"><input type="radio" name="mode" value="enade">🎓 ENADE</label>
+      </div>
+
+      <div id="modeClassic">
+        <div class="lvlrow" style="margin-top:12px">
+          <div class="lvl">🟢 Fácil<small>50 s por pergunta</small></div><span class="arrow">➜</span>
+          <div class="lvl">🟡 Médio<small>50 s por pergunta</small></div><span class="arrow">➜</span>
+          <div class="lvl">🔴 Difícil<small>50 s por pergunta</small></div>
+        </div>
+        <p class="small" style="margin:8px 0 0">As perguntas começam fáceis e vão ficando mais difíceis.</p>
+      </div>
+      <div id="modeEnade" style="display:none">
+        <div class="enade-box">
+          <b>🎓 Nível ENADE:</b> todas as perguntas no estilo da prova: situações do dia a dia, várias etapas de cálculo e afirmativas para julgar (I, II, III).<br>
+          <b>⏱ 100 s</b> por pergunta e <b>pontos em dobro</b> a cada acerto.
+        </div>
+      </div>
+
+      <label class="t">Perguntas por jogador</label>
+      <div class="chips">
+        <label class="chip"><input type="radio" name="qtd" value="9" checked>9</label>
+        <label class="chip"><input type="radio" name="qtd" value="12">12</label>
+        <label class="chip"><input type="radio" name="qtd" value="15">15</label>
+      </div>
+
+      <label class="t">Opções</label>
+      <div class="chips">
+        <label class="chip"><input type="checkbox" id="study">📖 Modo estudo (sem tempo e sem vidas)</label>
+        <label class="chip"><input type="checkbox" id="sound" checked>🔊 Som</label>
+      </div>
+
+      <div class="err" id="menuErr"></div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn" id="startBtn">▶ Começar</button>
+        <button class="btn alt" id="rankBtn">🏆 Ranking</button>
+      </div>
+
+      <div class="how">
+        <b>Como funciona:</b> cada acerto vale <b>100 pontos</b>, mais bônus por rapidez, por <b>sequência</b> de acertos (🔥) e pelo nível da pergunta. Cada jogador tem <b>3 vidas</b> ❤️. A <b>dica</b> 💡 custa 30 pontos e existe em todas as perguntas. Depois de cada resposta aparece a explicação passo a passo.<br>
+        <b>2 jogadores:</b> vocês jogam no mesmo aparelho, um de cada vez. Os dois recebem perguntas do mesmo tema e do mesmo nível em cada rodada, e quem fizer mais pontos vence.<br>
+        Atalhos: <kbd>1</kbd>–<kbd>4</kbd> para responder e <kbd>Enter</kbd> para avançar.
+      </div>
+    </div>
+  </section>
+
+  <!-- JOGO -->
+  <section id="game" class="screen">
+    <div class="hud">
+      <div class="pill" id="hudQ">Pergunta 1/9</div>
+      <div class="row" style="gap:8px">
+        <div class="pill" id="hudLevel">🟢 Fácil</div>
+        <div class="pill" id="hudTime">⏱ 50s</div>
+      </div>
+    </div>
+    <div class="players" id="hudPlayers"></div>
+    <div class="progress" id="prog"></div>
+    <div class="timer" id="timerBox"><div id="timerBar"></div></div>
+
+    <div class="card">
+      <span class="tag" id="qTopic">Tema</span>
+      <div class="qtext" id="qText"></div>
+      <div class="vis" id="qVis"></div>
+      <div class="legend" id="qLegend"></div>
+      <div class="opts" id="qOpts"></div>
+      <div class="hint" id="qHint"></div>
+      <div class="fb" id="fb">
+        <h3 id="fbTitle"></h3>
+        <div class="exp" id="fbExp"></div>
+        <div class="row" style="margin-top:14px"><button class="btn blue" id="nextBtn">Próxima ➜</button></div>
+      </div>
+      <div class="tools" id="tools">
+        <button class="btn alt" id="hintBtn" style="font-size:16px;padding:8px 14px">💡 Dica (−30)</button>
+        <button class="btn alt" id="quitBtn" style="font-size:16px;padding:8px 14px">✖ Encerrar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTADO -->
+  <section id="result" class="screen">
+    <div class="card">
+      <span class="tag" id="resTag">Resultado</span>
+      <h2 class="f" id="resTitle" style="font-size:32px;margin:10px 0 0"></h2>
+      <div class="resplayers" id="resPlayers"></div>
+      <div class="grid2">
+        <div>
+          <h3 class="f">Desempenho por tema</h3>
+          <div id="resTopics"></div>
+        </div>
+        <div>
+          <h3 class="f">🏆 Ranking (neste navegador)</h3>
+          <table class="rank" id="resRank"></table>
+        </div>
+      </div>
+      <div class="row" style="margin-top:20px">
+        <button class="btn" id="againBtn">↻ Jogar de novo</button>
+        <button class="btn alt" id="menuBtn">⌂ Menu</button>
+      </div>
+      <h3 class="f" style="margin-top:28px" id="revTitle">Revise o que errou</h3>
+      <div id="resReview"></div>
+    </div>
+  </section>
+
+  <!-- RANKING -->
+  <section id="ranking" class="screen">
+    <div class="card">
+      <h2 class="f" style="font-size:32px;margin:0 0 12px">🏆 Ranking</h2>
+      <table class="rank" id="rankTable"></table>
+      <p class="small">O ranking fica salvo só neste navegador.</p>
+      <button class="btn alt" id="rankBack">⌂ Voltar</button>
+    </div>
+  </section>
+</div>
+
+<!-- TELA DE VEZ / NÍVEL -->
+<div class="overlay" id="turnOv">
+  <div class="card turn" id="turnCard">
+    <div class="pill" id="turnLevel" style="display:inline-flex">🟢 Nível Fácil</div>
+    <h2 class="f" id="turnTitle">Vez de Ana!</h2>
+    <p id="turnSub" style="font-size:17px;line-height:1.5"></p>
+    <button class="btn" id="turnGo">Estou pronto ▶</button>
+    <p class="small" style="margin-top:12px">ou aperte <kbd>Enter</kbd></p>
+  </div>
+</div>
+
+<script src="script.js"></script>
+<script src="enade.js"></script>
+</body>
+</html>
